@@ -38,6 +38,7 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__HealthFactorOk();
     error DSCEngine__HealthFactorNotImproved();
     error DSCEngine__NotEnoughDscMinted();
+    error DSCEngine__InsufficientCollateral();
 
     /*//////////////////////////////////////////////////////////////
                            STATE Variables
@@ -226,6 +227,9 @@ contract DSCEngine is ReentrancyGuard {
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
         private
     {
+        if (s_collateralDeposited[from][tokenCollateralAddress] < amountCollateral) {
+            revert DSCEngine__InsufficientCollateral();
+        }
         s_collateralDeposited[from][tokenCollateralAddress] -= amountCollateral;
         emit CollateralRedeemed(from, to, tokenCollateralAddress, amountCollateral);
 
@@ -341,5 +345,9 @@ contract DSCEngine is ReentrancyGuard {
 
     function getAmountOfCollateralDeposited(address user, address token) external view returns (uint256) {
         return s_collateralDeposited[user][token];
+    }
+
+    function getCollateralTokens() external view returns (address[] memory) {
+        return s_collateralTokens;
     }
 }
